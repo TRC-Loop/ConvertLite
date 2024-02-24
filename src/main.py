@@ -4,6 +4,8 @@ from PyQt5.QtCore import Qt
 import os
 import time
 from scripts.FileHelper import get_file_name_without_extension, get_full_file_name, get_file_type
+from PIL import Image
+from moviepy.editor import VideoFileClip
 
 FILE_CATEGORIES = {
     'image': {
@@ -24,8 +26,75 @@ FILE_CATEGORIES = {
     }
 }
 
+class ConverterWindow(QMainWindow):
+    def __init__(self, file_path, newext) -> None:
+        super().__init__()
+        self.setWindowTitle('ConvertLite')
+        self.setFixedSize(400, 200)
+        self.file_path = file_path
+        self.newext = newext
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.layout = QVBoxLayout()
+        self.central_widget.setLayout(self.layout)
+        self.label = QLabel(f"Converting {self.file_path} to {self.newext}", self)
+        self.label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.label)
+        self.show()
+        self.convertFile()
+
+    def getFileCategory(self, extension):
+            for category, extensions in FILE_CATEGORIES.items():
+                if extension in extensions:
+                    return category
+            return None
+
+    def convertFile(self):
+        _, ext = os.path.splitext(self.file_path)
+        ext = ext.lstrip('.').lower()  # Remove the dot and lowercase
+        file_category = self.getFileCategory(ext)
+
+        if file_category == 'image':
+            self.convertImage()
+        elif file_category == 'video':
+            self.convertVideo()
+            pass
+        elif file_category == 'document':
+            # Placeholder for document conversion logic
+            pass
+        else:
+            QMessageBox.warning(self, "Error", "Unsupported file format.")
+            exit(1)
+
+    def convertImage(self):
+        try:
+            with Image.open(self.file_path) as img:
+                target_file = self.file_path.rsplit('.', 1)[0] + '.' + self.newext
+                img.save(target_file)
+                exit(0)
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Failed to convert image: {e}")
+            exit(1)
+
+    def convertVideo(self):
+        try:
+            # Load the video file
+            clip = VideoFileClip(self.file_path)
+            
+            # Define the target file name with the new extension
+            target_file = self.file_path.rsplit('.', 1)[0] + '.' + self.newext
+            
+            # Depending on the extension, you might need different methods or settings
+            # For simplicity, we're using write_videofile which should work for common formats
+            clip.write_videofile(target_file)
+            
+            QMessageBox.information(self, "Success", f"Video converted successfully to {self.newext}!")
+            exit(0)
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Failed to convert video: {e}")
+            exit(1)
 class GridListWindow(QMainWindow):
-    def __init__(self, elements):
+    def __init__(self, elements, file_path):
         super().__init__()
         self.setWindowTitle('File Options')
         self.setFixedSize(400, 300)
@@ -34,7 +103,7 @@ class GridListWindow(QMainWindow):
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout()
         central_widget.setLayout(layout)
-
+        self.file_path = file_path
          # Use QPushButton for clickable elements
         for tag, primary_text, secondary_text in elements:
             button = QPushButton(f"{primary_text}\n{secondary_text}", self)
@@ -52,9 +121,13 @@ class GridListWindow(QMainWindow):
         self.grid_layout.addWidget(button, row, column)
 
     def element_clicked(self, tag):
-        QMessageBox.information(self, "Element Clicked", f"You clicked on element with tag: {tag}")
+        self.openEmptyWindow(tag)
+        self.hide()
 
-
+    def openEmptyWindow(self, newext):
+        # Pass the data to GridListWindow
+        self.new_window = ConverterWindow(self.file_path, newext)
+        self.new_window.show()
     
 
 
@@ -70,7 +143,7 @@ class DropWindow(QMainWindow):
         self.layout = QVBoxLayout()
         self.central_widget.setLayout(self.layout)
 
-        self.label = QLabel("", self)
+        self.label = QLabel("Drop a File here", self)
         self.label.setToolTip("Drag and drop a file here")
         self.label.setToolTipDuration(2000)
         self.label.setAlignment(Qt.AlignCenter)
@@ -97,7 +170,7 @@ class DropWindow(QMainWindow):
         elements = []
         for ext, description in FILE_CATEGORIES[category].items():
             if ext != file_type:  # Correctly exclude the current file type
-                element_tag = f"{category}_{ext}"
+                element_tag = str(ext)
                 element_primary_text = f"{ext.upper()} file"
                 element_secondary_text = description
                 elements.append((element_tag, element_primary_text, element_secondary_text))
@@ -111,8 +184,17 @@ class DropWindow(QMainWindow):
         msgBox.setWindowTitle("ConvertLite")
         msgBox.exec_()
 
+
+
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
+            files = [u.toLocalFile() for u in event.mimeData().urls()]
+            if files:
+                # Just take the first file for simplicity
+                file_path = files[0]
+                self.label.setText(f"Found: {file_path}")
+            else:
+                self.label.setText("Drop a File here")
             event.accept()
         else:
             event.ignore()
@@ -152,7 +234,7 @@ class DropWindow(QMainWindow):
 
     def openEmptyWindow(self):
         # Pass the data to GridListWindow
-        self.new_window = GridListWindow(self.elementsList)
+        self.new_window = GridListWindow(self.elementsList, self.file_path)
         self.new_window.show()
 
 
