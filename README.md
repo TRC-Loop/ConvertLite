@@ -20,7 +20,7 @@ ConvertLite is a versatile file conversion tool built with Python and PyQt5, sup
 1. **Clone the repository**:
 
 ```bash
-git clone https://github.com/yourusername/ConvertLite.git
+git clone https://github.com/TRC-Loop/ConvertLite.git
 cd ConvertLite
 ```
 
@@ -90,7 +90,3 @@ If you encounter an error stating that `ffmpeg` could not be found, ensure that 
 ### Python Package Issues
 
 If you face issues with Python packages, ensure you have the correct version of Python installed and you are using the correct pip version (`pip`, `pip3`, or specifying with `python -m pip`). Reinstall the dependencies ensuring no errors are encountered during the installation.
-
----
-
-Remember to replace placeholders like `/path/to/ffmpeg` and `https://github.com/yourusername/ConvertLite.git` with actual values relevant to the user's setup and your repository URL.
