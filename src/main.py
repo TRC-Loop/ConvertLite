@@ -14,12 +14,17 @@ FILE_CATEGORIES = {
         'jpeg': 'JPEG image',
         'gif': 'Graphics Interchange Format',
         'bmp': 'Bitmap image file',
-        'svg': 'Scalable Vector Graphics',
+        'ico': 'Bitmap Icon file',
+        'tiff': 'Tagged Image File Format',
+        'webp': 'WebP image file',
     },
     'video': {
         'mp4': 'MPEG-4 video file',
         'mov': 'Apple QuickTime movie file',
         'mkv': 'Matroska Multimedia Container',
+        'avi': 'Audio Video Interleave',
+        'wmv': 'Windows Media Video',
+        'webm': 'WebM video file',
     },
     'document': {
         'pdf': 'Portable Document Format',
