@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QMainWindow, QMessageBox, QPushButton, QGridLayout, QLineEdit, QFormLayout
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QMainWindow, QMessageBox, QPushButton, QFileDialog, QLineEdit, QFormLayout
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QColor, QIntValidator
 import os
@@ -286,8 +286,8 @@ class DropWindow(QMainWindow):
         self.layout = QVBoxLayout()
         self.central_widget.setLayout(self.layout)
 
-        self.label = QLabel("Drop a File here", self)
-        self.label.setToolTip("Drag and drop a file here")
+        self.label = QLabel("Drop a file or Click to select a file.", self)
+        self.label.setToolTip("Click to open a file or drop a file here.")
         self.label.setToolTipDuration(2000)
         self.label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.label)
@@ -327,6 +327,12 @@ class DropWindow(QMainWindow):
         msgBox.exec_()
 
 
+    def mousePressEvent(self, event):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select a file to convert")
+        if file_path:  # Überprüft, ob ein Dateipfad ausgewählt wurde
+            self.processFile(file_path)
+            self.openEmptyWindow()
+            self.hide()
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
