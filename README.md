@@ -8,6 +8,9 @@ ConvertLite is a versatile file conversion tool built with Python and PyQt5, sup
 - **Video Conversion**: Supports MP4, MOV, MKV formats.
 - **Document Conversion**: Support for PDF format.
 
+- Click or drag a file into the program
+- Select which type you want to convert it in or shift+click to also adjust image/video settings
+- Get the converted file in the same directory as the old one
 ## Installation
 
 ### Prerequisites
