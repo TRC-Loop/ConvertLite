@@ -11,6 +11,7 @@ ConvertLite is a versatile file conversion tool built with Python and PyQt5, sup
 - Click or drag a file into the program
 - Select which type you want to convert it in or shift+click to also adjust image/video settings
 - Get the converted file in the same directory as the old one
+- I also want to add batch/bulk conversion later
 ## Installation
 
 ### Prerequisites
