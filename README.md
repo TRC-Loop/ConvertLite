@@ -45,6 +45,8 @@ pip install -r requirements.txt
 ```
 
 3. **Install ffmpeg**:
+- **Windows**
+  Download from official website: https://ffmpeg.org/download.html
 
 - **macOS**:
   
@@ -70,6 +72,8 @@ To start ConvertLite, navigate to the project directory and run:
 ```bash
 python main.py
 ```
+if `python` doesnt work, try `python3` (macOS/Linux) or `py` (Windows).
+
 
 ## Troubleshooting
 
