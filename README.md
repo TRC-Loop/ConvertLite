@@ -1,5 +1,5 @@
 # ConvertLite
-
+![ConvertliteCard](https://github.com/TRC-Loop/ConvertLite/blob/main/static/ConvertliteCard.png)
 ConvertLite is a versatile file conversion tool built with Python and PyQt5, supporting image, video, and document formats. It offers a simple drag-and-drop interface for easy file conversion. Logo generated using AI (Bing in the 24th Februrary 2024 - 21:16).
 
 ## Features
