@@ -45,8 +45,6 @@ pip install -r requirements.txt
 ```
 
 3. **Install ffmpeg**:
-- **Windows**
-  Download from official website: https://ffmpeg.org/download.html
 
 - **macOS**:
   
@@ -64,6 +62,9 @@ pip install -r requirements.txt
 - **Windows**:
 
   Download and install `ffmpeg` from [ffmpeg.org](https://ffmpeg.org/download.html). Add the path to the `ffmpeg` binary to your system's PATH variable.
+
+**Test `FFMPEG`installation**
+Type: `ffmpeg`into your terminal. You should get something like Copyright or the version. If it is not found see [Troubleshooting](##Troubleshooting)
 
 ## Usage
 
