@@ -1,6 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QMainWindow, QMessageBox, QPushButton, QGridLayout
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QMainWindow, QMessageBox, QPushButton, QGridLayout, QLineEdit, QFormLayout
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QFont, QColor, QIntValidator
 import os
 import time
 from scripts.FileHelper import get_file_name_without_extension, get_full_file_name, get_file_type
@@ -30,9 +31,14 @@ FILE_CATEGORIES = {
         'pdf': 'Portable Document Format',
     }
 }
+def getFileCategory(extension):
+    for category, extensions in FILE_CATEGORIES.items():
+        if extension in extensions:
+            return category
+    return None
 
 class ConverterWindow(QMainWindow):
-    def __init__(self, file_path, newext) -> None:
+    def __init__(self, file_path, newext, options=None) -> None:
         super().__init__()
         self.setWindowTitle('ConvertLite')
         self.setFixedSize(400, 200)
@@ -40,6 +46,7 @@ class ConverterWindow(QMainWindow):
         self.newext = newext
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
+        self.options = options if options is not None else {}
         self.layout = QVBoxLayout()
         self.central_widget.setLayout(self.layout)
         self.label = QLabel(f"Converting {self.file_path} to {self.newext}", self)
@@ -48,16 +55,12 @@ class ConverterWindow(QMainWindow):
         self.show()
         self.convertFile()
 
-    def getFileCategory(self, extension):
-            for category, extensions in FILE_CATEGORIES.items():
-                if extension in extensions:
-                    return category
-            return None
+
 
     def convertFile(self):
         _, ext = os.path.splitext(self.file_path)
         ext = ext.lstrip('.').lower()  # Remove the dot and lowercase
-        file_category = self.getFileCategory(ext)
+        file_category = getFileCategory(ext)
 
         if file_category == 'image':
             self.convertImage()
@@ -71,12 +74,31 @@ class ConverterWindow(QMainWindow):
             QMessageBox.warning(self, "Error", "Unsupported file format.")
             exit(1)
 
+        reply = QMessageBox.question(self, 'Finished!',
+                                 "Do you want to convert another file?",
+                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            self.openDropWindow()
+        else:
+            self.close()
+            exit(0)
+
+
+
+    def openDropWindow(self):
+        self.close()
+    
+        self.dropWindow = DropWindow() 
+        self.dropWindow.show()
+
     def convertImage(self):
         try:
             with Image.open(self.file_path) as img:
+                if self.options:  # Check if there are any options
+                    img = img.resize((int(self.options.get('width')), int(self.options.get('height'))))
                 target_file = self.file_path.rsplit('.', 1)[0] + '.' + self.newext
                 img.save(target_file)
-                exit(0)
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Failed to convert image: {e}")
             exit(1)
@@ -85,55 +107,152 @@ class ConverterWindow(QMainWindow):
         try:
             # Load the video file
             clip = VideoFileClip(self.file_path)
-            
+            if self.options:  # Beispiel für Video
+                clip = clip.resize(newsize=(int(clip.w), int(clip.h)), width=int(self.options.get('width')), height=int(self.options.get('height')))
+                clip = clip.set_fps(int(self.options.get('fps')))
+
             # Define the target file name with the new extension
             target_file = self.file_path.rsplit('.', 1)[0] + '.' + self.newext
             
             # Depending on the extension, you might need different methods or settings
             # For simplicity, we're using write_videofile which should work for common formats
             clip.write_videofile(target_file)
-            
-            QMessageBox.information(self, "Success", f"Video converted successfully to {self.newext}!")
-            exit(0)
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Failed to convert video: {e}")
             exit(1)
+
+
+class CustomButton(QPushButton):
+    clickedWithShift = pyqtSignal()
+    def __init__(self, text, parent=None, tag=None):
+            super().__init__(text, parent)
+            self.tag = tag  # Speichere das tag für späteren Gebrauch
+
+    def mousePressEvent(self, event):
+        if event.modifiers() == Qt.ShiftModifier:
+            self.clickedWithShift.emit()
+        else:
+            super().mousePressEvent(event)
+
 class GridListWindow(QMainWindow):
     def __init__(self, elements, file_path):
         super().__init__()
-        self.setWindowTitle('File Options')
-        self.setFixedSize(400, 300)
+        self.setWindowTitle('ConvertLite')
+        self.setFixedSize(300, 400)
+        self.file_path = file_path
         
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout()
         central_widget.setLayout(layout)
-        self.file_path = file_path
-         # Use QPushButton for clickable elements
+        # create label for info
+        
+
+        # Use CustomButton for clickable elements
         for tag, primary_text, secondary_text in elements:
-            button = QPushButton(f"{primary_text}\n{secondary_text}", self)
+            button = CustomButton(f"{primary_text}\n{secondary_text}", self, tag=tag)
             button.clicked.connect(lambda checked, tag=tag: self.element_clicked(tag))
+            button.clickedWithShift.connect(lambda tag=tag: self.handleShiftClick(tag))
+
+
+
+
             layout.addWidget(button)
+
+        hint_label = QLabel("Hold shift while choosing format to configure properties")
+        hint_label.setFont(QFont("Arial", 8))  
+        hint_label.setStyleSheet("color: gray;")  
+        hint_label.setAlignment(Qt.AlignCenter)  
+        layout.addWidget(hint_label)  
+        self.show()
+
+    def handleShiftClick(self, tag):
+        config_win = ConfigurationWin(tag, self.file_path, self.openConversionWindow)
+        config_win.show()
+        self.current_config_win = config_win
+
+
+
+
+    def element_clicked(self, tag):
+        self.openConversionWindow(tag)
+
+
+    def openEmptyWindow(self, newext):
+        self.new_window = ConverterWindow(self.file_path, newext)
+        self.new_window.show()
+
+    def config_window(self, tag):
+        # Pass a method as the convert_callback to ConfigurationWin
+        config_win = ConfigurationWin(tag, self.file_path, self.convert_callback)
+        config_win.show()
+
+    def convert_callback(self, file_path, newext, options):
+        self.openConversionWindow(newext, options)
+
+    def openConversionWindow(self, newext, options=None):  # options hinzugefügt
+        self.new_window = ConverterWindow(self.file_path, newext, options)
+        self.new_window.show()
+
+
+class ConfigurationWin(QMainWindow):
+    def __init__(self, tag, file_path, openConversionWindow):
+        super().__init__()
+        self.setWindowTitle(f'Configuration for {tag}')
+        self.setFixedSize(400, 300)
+        
+        self.file_path = file_path
+        self.tag = tag
+        
+        self.openConversionWindow = openConversionWindow
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout()
+        central_widget.setLayout(layout)
+        
+        file_type = getFileCategory(self.tag)
+        
+        self.intValidator = QIntValidator(1, 99999)
+
+        self.config_form = QFormLayout()
+
+        if file_type == 'image':
+            self.imageWidthInput = QLineEdit()
+            self.imageWidthInput.setValidator(self.intValidator)  # Validator setzen
+            self.config_form.addRow("Width (px):", self.imageWidthInput)
+            
+            self.imageHeightInput = QLineEdit()
+            self.imageHeightInput.setValidator(self.intValidator)  # Validator setzen
+            self.config_form.addRow("Height (px):", self.imageHeightInput)
+        elif file_type == 'video':
+            self.videoFpsInput = QLineEdit()
+            self.videoFpsInput.setValidator(self.intValidator)  # Validator setzen für FPS, angenommen FPS ist auch eine ganze Zahl
+            self.config_form.addRow("FPS:", self.videoFpsInput)
+        
+        layout.addLayout(self.config_form)
+        
+        goButton = QPushButton("Go", self)
+        goButton.clicked.connect(self.startConversion)
+        layout.addWidget(goButton)
 
         self.show()
 
-    def add_element_to_grid(self, tag, primary_text, secondary_text):
-        button = QPushButton(f"{primary_text}\n{secondary_text}")
-        button.clicked.connect(lambda: self.element_clicked(tag))
-        position = len(self.grid_layout.children())  # Current number of widgets in grid
-        row = position // 3  # Adjust the divisor based on your desired grid width
-        column = position % 3
-        self.grid_layout.addWidget(button, row, column)
+    # Start the conversion with the specified configurations
+    def startConversion(self):
+        options = {}
+        if getFileCategory(self.tag) == 'image':
+            options['width'] = self.imageWidthInput.text()
+            options['height'] = self.imageHeightInput.text()
+        elif getFileCategory(self.tag) == 'video':
+            options['fps'] = self.videoFpsInput.text()
+        
+        # Rufen Sie hier direkt openConversionWindow auf
+        self.openConversionWindow(self.tag, options)
+        self.close()
 
-    def element_clicked(self, tag):
-        self.openEmptyWindow(tag)
-        self.hide()
 
-    def openEmptyWindow(self, newext):
-        # Pass the data to GridListWindow
-        self.new_window = ConverterWindow(self.file_path, newext)
-        self.new_window.show()
-    
+
 
 
 
@@ -174,11 +293,10 @@ class DropWindow(QMainWindow):
             raise NotImplementedError(f"File type {file_type} is not supported, supported types are: {', '.join(FILE_CATEGORIES.keys())}")
         elements = []
         for ext, description in FILE_CATEGORIES[category].items():
-            if ext != file_type:  # Correctly exclude the current file type
-                element_tag = str(ext)
-                element_primary_text = f"{ext.upper()} file"
-                element_secondary_text = description
-                elements.append((element_tag, element_primary_text, element_secondary_text))
+            element_tag = str(ext)
+            element_primary_text = f"{ext.upper()} file"
+            element_secondary_text = description
+            elements.append((element_tag, element_primary_text, element_secondary_text))
         return elements
 
     def showError(self, message):
