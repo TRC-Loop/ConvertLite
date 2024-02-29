@@ -51,7 +51,7 @@ pip install -r requirements.txt
   ```bash
   brew install ffmpeg
   ```
-
+  *You may have to install Homebrew: [Homebrew Official Website](https://brew.sh) Then run the installation command.
 - **Linux**:
   
   ```bash
@@ -79,9 +79,26 @@ if `python` doesnt work, try `python3` (macOS/Linux) or `py` (Windows).
 
 ## Troubleshooting
 
+### Wrong Python/Not Found
+- Make sure you have  installed python
+- Libraries installed but you still get a ModuleNotFound Error
+
+if `python` doesnt work, try `python3` (macOS/Linux) or `py` (Windows).
+if there are problems with packages please try: 
+```bash
+python -m pip install ... (Windows)
+python3 -m pip install ... (MacOS)
+py -m pip install ... (Windows)
+pip install ... (Windows)
+pip3 install ... (MacOS)
+```
+*Windows Commands may also work on MacOS and MacOS Commands may also work on Windows.*
+
+
 ### ffmpeg not found
 
 If you encounter an error stating that `ffmpeg` could not be found, ensure that `ffmpeg` is correctly installed and its path is added to your system's PATH environment variable. Alternatively, you can set the `IMAGEIO_FFMPEG_EXE` environment variable to the path of the `ffmpeg` executable.
+
 
 #### Setting the `IMAGEIO_FFMPEG_EXE` variable:
 
