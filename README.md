@@ -51,7 +51,7 @@ pip install -r requirements.txt
   ```bash
   brew install ffmpeg
   ```
-  *You may have to install Homebrew: [Homebrew Official Website](https://brew.sh) Then run the installation command.
+  *You may have to install Homebrew: [Homebrew Official Website](https://brew.sh) Then run the installation command.*
 - **Linux**:
   
   ```bash
