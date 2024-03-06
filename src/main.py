@@ -94,7 +94,7 @@ class ConverterWindow(QMainWindow):
             exit(1)
 
         reply = QMessageBox.question(self, 'Finished!',
-                                 "Do you want to convert another file?",
+                                 "Finished! Do you want to convert another file?",
                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
